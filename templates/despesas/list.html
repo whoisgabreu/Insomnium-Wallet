@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load finance_filters %}
+
+{% block title %}Despesas | FinanceHQ{% endblock %}
+
+{% block content %}
+<div class="header-actions mb-2">
+    <h1>Minhas Despesas</h1>
+    <a href="{% url 'despesa_create' %}" class="btn btn-danger">+ Nova Despesa</a>
+</div>
+
+<div class="dash-grid layout-1-3">
+    <!-- Resumo do Mês -->
+    <div class="card" style="height: fit-content;">
+        <h3>{{ mes_nome }}</h3>
+        <div class="mt-1 mb-1">
+            <span class="metric-title">Total Gasto</span>
+            <div class="metric-value danger">{{ total_mes|currency }}</div>
+        </div>
+        
+        <hr style="border-color:var(--glass-border); margin: 1rem 0">
+        
+        <h3 style="font-size: 1rem">Histórico</h3>
+        <ul style="list-style: none; padding:0; margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem">
+            {% for m in meses_disponiveis %}
+            <li>
+                <a href="?mes={{ m.mes.month }}&ano={{ m.mes.year }}" 
+                   class="btn {% if m.mes.month == mes_atual and m.mes.year == ano_atual %}btn-primary{% else %}btn-outline{% endif %}" 
+                   style="width:100%; justify-content:center; padding:0.5rem">
+                    {{ m.mes|date:"F Y" }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Lista -->
+    <div class="card">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Anexo</th>
+                        <th class="text-right">Valor</th>
+                        <th class="text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in despesas %}
+                    <tr>
+                        <td>{{ d.data|date:"d/m/Y" }}</td>
+                        <td>{{ d.descricao }}</td>
+                        <td>
+                            {% if d.gasto_fixo %}
+                            <span class="badge badge-warning">Gasto Fixo</span>
+                            {% else %}
+                            <span class="badge" style="background:rgba(255,255,255,0.1)">Avulso</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if d.comprovante %}
+                            <a href="{{ d.comprovante.url }}" target="_blank" style="font-size:0.8rem">🔗 Ver</a>
+                            {% else %}
+                            <span style="color:var(--text-muted); font-size:0.8rem">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right danger">{{ d.valor|currency }}</td>
+                        <td class="text-right">
+                            <div class="flex gap-1" style="justify-content: flex-end; align-items: center;">
+                                <a href="{% url 'despesa_update' d.pk %}" class="btn btn-outline" style="padding: 0.3rem 0.5rem; font-size:0.8rem">Editar</a>
+                                <a href="{% url 'despesa_delete' d.pk %}" class="btn btn-danger" style="padding: 0.3rem 0.5rem; font-size:0.8rem">X</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="text-center">Nenhuma despesa registrada neste mês.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

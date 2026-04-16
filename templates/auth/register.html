@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro | FinanceHQ{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="card auth-card">
+        <div class="text-center mb-2">
+            <h1 style="margin:0">Criar Conta</h1>
+            <p>Junte-se ao FinanceHQ</p>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <div style="color:var(--text-muted); font-size: 0.75rem; margin-top:0.25rem;">
+                    {{ field.help_text }}
+                </div>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color:var(--danger); font-size: 0.85rem; margin-top:0.25rem;">
+                    {{ field.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary" style="width:100%">Cadastrar</button>
+        </form>
+        
+        <div class="text-center mt-2">
+            <p>Já possui conta? <a href="{% url 'login' %}">Faça login</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

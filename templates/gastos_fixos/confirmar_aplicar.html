@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Aplicar Gasto Fixo | FinanceHQ{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+    <div class="mb-2">
+        <h1>Lançar Despesa</h1>
+        <p>Você está prestes a lançar o gasto fixo <strong>{{ gf.nome }}</strong> no mês atual.</p>
+    </div>
+
+    {% if ja_lancado %}
+    <div class="alert alert-amarelo mb-2">
+        <strong>Atenção:</strong> Você já lançou este gasto fixo no mês atual! Tem certeza que deseja lançar novamente (duplicidade)?
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="forcar" value="true">
+        
+        <div class="flex gap-1 justify-center mt-2">
+            <button type="submit" class="btn btn-primary">{% if ja_lancado %}Sim, Lançar Novamente{% else %}Confirmar e Lançar{% endif %}</button>
+            <a href="{% url 'gasto_fixo_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

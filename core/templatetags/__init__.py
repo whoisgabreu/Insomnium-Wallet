@@ -1,0 +1,1 @@
+# Make templatetags a module

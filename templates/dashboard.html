@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load finance_filters %}
+
+{% block title %}Dashboard | FinanceHQ{% endblock %}
+
+{% block content %}
+<div class="flex justify-between align-center mb-2">
+    <h1>Visão Geral</h1>
+    <p>Olá, {{ user.first_name|default:user.username }}</p>
+</div>
+
+<!-- Alertas Inteligentes -->
+{% if alerta %}
+<div class="alert alert-{{ alerta.nivel }}">
+    <h3>{{ alerta.titulo }}</h3>
+    <p>{{ alerta.mensagem }}</p>
+    <div style="margin-top: 0.5rem; background: rgba(0,0,0,0.2); height: 8px; border-radius: 4px; overflow: hidden;">
+        <div style="width: {{ alerta.percentual }}%; max-width: 100%; height: 100%; background: currentcolor;"></div>
+    </div>
+</div>
+{% endif %}
+
+<!-- KPIs  -->
+<div class="dash-grid">
+    <div class="card metric-card" style="border: 1px solid var(--primary); background: rgba(79, 70, 229, 0.05)">
+        <div class="flex align-center gap-1">
+            <span class="metric-title">Saldo Total da Conta</span>
+        </div>
+        <span class="metric-value {% if saldo_total_conta >= 0 %}success{% else %}danger{% endif %}" style="font-size: 2.6rem;">
+            {{ saldo_total_conta|currency }}
+        </span>
+    </div>
+
+    <div class="card metric-card">
+        <span class="metric-title">Balanço do Mês ({{ hoje|date:"F/Y" }})</span>
+        <span class="metric-value {% if saldo_mes >= 0 %}success{% else %}danger{% endif %}">
+            {{ saldo_mes|currency }}
+        </span>
+    </div>
+
+    <div class="card metric-card">
+        <span class="metric-title">Receitas (Mês)</span>
+        <span class="metric-value success">+ {{ total_receita_mes|currency }}</span>
+    </div>
+
+    <div class="card metric-card">
+        <span class="metric-title">Despesas (Mês)</span>
+        <span class="metric-value danger">- {{ total_gasto_mes|currency }}</span>
+    </div>
+    
+    <div class="card metric-card">
+        <span class="metric-title">Comprometimento de Renda</span>
+        <span class="metric-value">{{ percentual_gasto|floatformat:1 }}%</span>
+    </div>
+</div>
+
+<div class="dash-grid layout-2-1">
+    <!-- Gráfico -->
+    <div class="card">
+        <h3 class="mb-1">Evolução de Entradas e Saídas</h3>
+        <canvas id="graficoMeses" height="100"></canvas>
+    </div>
+
+    <!-- Análises Rápidas -->
+    <div class="card">
+        <h3 class="mb-1">Análises</h3>
+        
+        <div class="mb-1">
+            <span class="metric-title">Total Gasto (All-Time)</span>
+            <div style="font-size: 1.2rem; font-weight:600">{{ total_gasto_alltime|currency }}</div>
+        </div>
+
+        <div class="mb-1 mt-1">
+            <span class="metric-title">Dia de Maior Gasto (Mês Atual)</span>
+            {% if dia_maior_gasto %}
+            <div style="font-size: 1.2rem; font-weight:600">
+                {{ dia_maior_gasto.data|date:"d/M" }} — <span class="danger">{{ dia_maior_gasto.total_dia|currency }}</span>
+            </div>
+            {% else %}
+            <div>Sem gastos.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Últimos Lançamentos -->
+<div class="dash-grid">
+    <div class="card">
+        <div class="flex justify-between align-center mb-1">
+            <h3>Últimas Despesas</h3>
+            <a href="{% url 'despesa_list' %}" class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size:0.8rem">Ver Todas</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <tbody>
+                    {% for d in ultimas_despesas %}
+                    <tr>
+                        <td>{{ d.data|date:"d/M" }}</td>
+                        <td>{{ d.descricao }}</td>
+                        <td class="text-right danger">- {{ d.valor|currency }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">Nenhuma despesa registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="flex justify-between align-center mb-1">
+            <h3>Últimas Receitas</h3>
+            <a href="{% url 'receita_list' %}" class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size:0.8rem">Ver Todas</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <tbody>
+                    {% for r in ultimas_receitas %}
+                    <tr>
+                        <td>{{ r.data|date:"d/M" }}</td>
+                        <td>{{ r.descricao|default:"Receita" }}</td>
+                        <td class="text-right success">+ {{ r.valor|currency }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">Nenhuma receita registrada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const ctx = document.getElementById('graficoMeses').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: {{ meses_labels|safe }},
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: {{ meses_receitas|safe }},
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Despesas',
+                    data: {{ meses_gastos|safe }},
+                    backgroundColor: '#ef4444',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#94a3b8' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

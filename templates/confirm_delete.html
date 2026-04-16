@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Excluir {{ tipo }} | FinanceHQ{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+    <div class="mb-2">
+        <h1 style="color: var(--danger)">Excluir {{ tipo }}</h1>
+        <p>Tem certeza que deseja excluir permanentemente o item abaixo?</p>
+    </div>
+
+    <div class="mb-2 p-1" style="background: rgba(255,255,255,0.05); border-radius: 8px;">
+        <strong style="font-size: 1.1rem">{{ obj }}</strong>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex gap-1 justify-center mt-2">
+            <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+            <a href="{% url back_url %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
